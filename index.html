@@ -9,15 +9,33 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --red:    #E11D48;
-      --pink:   #FB7185;
-      --blue:   #2563EB;
-      --bg:     #0A0A0F;
-      --card:   #12121A;
-      --border: #2A2A3A;
-      --text:   #F1F1F5;
-      --muted:  #6B6B8A;
+      --red:       #E11D48;
+      --pink:      #FB7185;
+      --blue:      #2563EB;
+      --bg:        #0A0A0F;
+      --card:      #12121A;
+      --border:    #2A2A3A;
+      --text:      #F1F1F5;
+      --muted:     #6B6B8A;
+      --chip-bg:   #1A1A28;
+      --result-bg: #0E0E18;
+      --select-bg: #1A1A28;
+      --scanline:  rgba(0,0,0,0.08);
     }
+
+    [data-theme="light"] {
+      --bg:        #F0EEF8;
+      --card:      #FFFFFF;
+      --border:    #D8D4EC;
+      --text:      #1A1828;
+      --muted:     #7878A8;
+      --chip-bg:   #ECEAF8;
+      --result-bg: #F5F3FF;
+      --select-bg: #ECEAF8;
+      --scanline:  rgba(0,0,0,0.025);
+    }
+
+    * { transition: background-color 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s; }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -25,9 +43,9 @@
       color: var(--text);
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 24px;
+      padding: 16px;
       overflow-x: hidden;
     }
 
@@ -40,8 +58,8 @@
         0deg,
         transparent,
         transparent 2px,
-        rgba(0,0,0,0.08) 2px,
-        rgba(0,0,0,0.08) 4px
+        var(--scanline) 2px,
+        var(--scanline) 4px
       );
       pointer-events: none;
       z-index: 999;
@@ -54,39 +72,41 @@
 
     /* Header */
     .header {
-      text-align: center;
-      margin-bottom: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
     .wolf-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 16px;
-      filter: drop-shadow(0 0 16px var(--red));
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 8px var(--red));
     }
 
     .title {
-      font-size: 2rem;
+      font-size: 1.15rem;
       font-weight: 900;
       letter-spacing: 0.08em;
-      text-shadow: 0 0 20px var(--red), 0 0 40px rgba(225,29,72,0.4);
+      text-shadow: 0 0 12px var(--red);
       color: #fff;
     }
 
     .subtitle {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       color: var(--muted);
-      margin-top: 6px;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
+      margin-left: auto;
     }
 
     /* Card */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 32px;
+      border-radius: 16px;
+      padding: 20px;
       box-shadow: 0 0 40px rgba(225,29,72,0.08), 0 4px 24px rgba(0,0,0,0.5);
     }
 
@@ -95,7 +115,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 28px;
+      margin-bottom: 16px;
     }
 
     .select-label {
@@ -110,17 +130,16 @@
     select {
       flex: 1;
       appearance: none;
-      background: #1A1A28;
+      background: var(--select-bg);
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--text);
       font-family: inherit;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
-      padding: 12px 40px 12px 16px;
+      padding: 9px 36px 9px 14px;
       cursor: pointer;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B6B8A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 12px center;
@@ -134,7 +153,7 @@
     /* Spin button */
     .btn-spin {
       width: 100%;
-      padding: 18px;
+      padding: 14px;
       border: none;
       border-radius: 14px;
       background: linear-gradient(135deg, var(--red), #9F1239);
@@ -191,7 +210,7 @@
     }
 
     .btn-dir {
-      padding: 14px 10px;
+      padding: 11px 10px;
       border: none;
       border-radius: 12px;
       font-family: inherit;
@@ -254,7 +273,7 @@
 
     /* Player grid */
     .grid-section {
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     .grid-header {
@@ -308,11 +327,11 @@
     }
 
     .player-chip {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
       border: 1.5px solid var(--border);
-      background: #1A1A28;
+      background: var(--chip-bg);
       color: var(--text);
       font-family: inherit;
       font-size: 0.95rem;
@@ -332,8 +351,8 @@
     }
 
     .player-chip.dead {
-      background: #0E0E18;
-      border-color: #1E1E2A;
+      background: var(--result-bg);
+      border-color: var(--border);
       color: #3A3A4A;
       cursor: pointer;
     }
@@ -356,8 +375,8 @@
 
     /* Result area */
     .result-area {
-      margin-top: 32px;
-      min-height: 160px;
+      margin-top: 0;
+      min-height: 130px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -372,10 +391,10 @@
 
     .result-card {
       width: 100%;
-      background: #0E0E18;
+      background: var(--result-bg);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
+      border-radius: 14px;
+      padding: 18px 16px;
       text-align: center;
       animation: reveal 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
     }
@@ -395,7 +414,7 @@
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
 
     .direction-badge.forward {
@@ -418,13 +437,13 @@
     }
 
     .num-box {
-      width: 90px;
-      height: 90px;
-      border-radius: 16px;
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.6rem;
+      font-size: 2rem;
       font-weight: 900;
       line-height: 1;
     }
@@ -459,7 +478,7 @@
     }
 
     .result-hint {
-      margin-top: 18px;
+      margin-top: 12px;
       font-size: 0.82rem;
       color: var(--muted);
       letter-spacing: 0.04em;
@@ -479,16 +498,42 @@
     .divider {
       border: none;
       border-top: 1px solid var(--border);
-      margin: 24px 0;
+      margin: 14px 0;
     }
 
     /* Footer note */
     .footer-note {
       text-align: center;
-      margin-top: 24px;
-      font-size: 0.78rem;
+      margin-top: 10px;
+      font-size: 0.72rem;
       color: var(--muted);
       letter-spacing: 0.06em;
+    }
+
+    /* Theme toggle */
+    .btn-theme {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-theme:hover {
+      border-color: var(--red);
+      color: var(--text);
+    }
+
+    .btn-theme svg {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -509,7 +554,10 @@
       <path d="M28 38 Q32 42 36 38" stroke="#FFF" stroke-width="2" stroke-linecap="round" fill="none"/>
     </svg>
     <h1 class="title">狼人殺</h1>
-    <p class="subtitle">Werewolf — 座位抽選器</p>
+    <span class="subtitle">座位抽選器</span>
+    <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" aria-label="切換主題">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
   </div>
 
   <!-- Card -->
@@ -519,7 +567,7 @@
     <div class="select-row">
       <span class="select-label">玩家人數</span>
       <select id="playerCount" aria-label="選擇玩家人數">
-        <option value="6" selected>6 人</option>
+        <option value="6">6 人</option>
         <option value="1">1 人</option>
         <option value="2">2 人</option>
         <option value="3">3 人</option>
@@ -586,12 +634,29 @@
 </div>
 
 <script>
+  const MOON = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  const SUN  = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeIcon').innerHTML = theme === 'light' ? MOON : SUN;
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
+  }
+
+  applyTheme(localStorage.getItem('theme') || 'dark');
+
   // Sort select options 1-15 in order
   const sel = document.getElementById('playerCount');
   const opts = Array.from(sel.options).sort((a, b) => +a.value - +b.value);
   sel.innerHTML = '';
   opts.forEach(o => sel.appendChild(o));
-  sel.value = '6';
+  sel.value = '10';
 
   let deadSet = new Set();
 
