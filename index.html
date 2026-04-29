@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>狼人殺 — 座位抽選</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:    #E11D48;
+      --pink:   #FB7185;
+      --blue:   #2563EB;
+      --bg:     #0A0A0F;
+      --card:   #12121A;
+      --border: #2A2A3A;
+      --text:   #F1F1F5;
+      --muted:  #6B6B8A;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    /* CRT scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .wolf-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      filter: drop-shadow(0 0 16px var(--red));
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 20px var(--red), 0 0 40px rgba(225,29,72,0.4);
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 0 40px rgba(225,29,72,0.08), 0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    /* Select row */
+    .select-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .select-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    select {
+      flex: 1;
+      appearance: none;
+      background: #1A1A28;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 12px 40px 12px 16px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B6B8A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    select:hover, select:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(225,29,72,0.2);
+    }
+
+    /* Spin button */
+    .btn-spin {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--red), #9F1239);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 20px rgba(225,29,72,0.4), 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .btn-spin::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-spin:hover::after { opacity: 1; }
+    .btn-spin:hover { transform: translateY(-2px); box-shadow: 0 0 32px rgba(225,29,72,0.6), 0 8px 20px rgba(0,0,0,0.4); }
+    .btn-spin:active { transform: translateY(0); }
+    .btn-spin:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      width: 22px;
+      height: 22px;
+      transition: transform 0.3s;
+    }
+
+    .btn-spin:not(:disabled):hover .btn-icon {
+      transform: rotate(30deg);
+    }
+
+    /* Direction buttons row */
+    .btn-dir-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .btn-dir {
+      padding: 14px 10px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-dir::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-dir:hover::after { opacity: 1; }
+    .btn-dir:hover { transform: translateY(-2px); }
+    .btn-dir:active { transform: translateY(0); }
+    .btn-dir:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-forward {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(37,99,235,0.35), 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .btn-forward:hover:not(:disabled) {
+      box-shadow: 0 0 28px rgba(37,99,235,0.55), 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    .btn-reverse {
+      background: linear-gradient(135deg, #9333EA, #7E22CE);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(147,51,234,0.35), 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .btn-reverse:hover:not(:disabled) {
+      box-shadow: 0 0 28px rgba(147,51,234,0.55), 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    .btn-dir-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn-dir-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Player grid */
+    .grid-section {
+      margin-bottom: 24px;
+    }
+
+    .grid-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .grid-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .grid-alive-count {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .grid-alive-count span {
+      color: #4ADE80;
+      font-weight: 700;
+    }
+
+    .btn-reset {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-reset:hover {
+      border-color: #4ADE80;
+      color: #4ADE80;
+    }
+
+    .player-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .player-chip {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #1A1A28;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+      position: relative;
+      user-select: none;
+    }
+
+    .player-chip:hover:not(.dead) {
+      border-color: var(--red);
+      background: rgba(225,29,72,0.1);
+    }
+
+    .player-chip.dead {
+      background: #0E0E18;
+      border-color: #1E1E2A;
+      color: #3A3A4A;
+      cursor: pointer;
+    }
+
+    .player-chip.dead::after {
+      content: '✕';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #E11D4855;
+    }
+
+    .player-chip.dead:hover {
+      border-color: #4ADE8055;
+      background: rgba(74,222,128,0.05);
+    }
+
+    /* Result area */
+    .result-area {
+      margin-top: 32px;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-placeholder {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
+
+    .result-card {
+      width: 100%;
+      background: #0E0E18;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      animation: reveal 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: scale(0.88) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .direction-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .direction-badge.forward {
+      background: rgba(37,99,235,0.2);
+      border: 1px solid rgba(37,99,235,0.4);
+      color: #60A5FA;
+    }
+
+    .direction-badge.reverse {
+      background: rgba(225,29,72,0.2);
+      border: 1px solid rgba(225,29,72,0.4);
+      color: var(--pink);
+    }
+
+    .numbers-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .num-box {
+      width: 90px;
+      height: 90px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .num-box.first {
+      background: linear-gradient(135deg, rgba(225,29,72,0.25), rgba(225,29,72,0.1));
+      border: 2px solid rgba(225,29,72,0.5);
+      color: #FCA5A5;
+      box-shadow: 0 0 20px rgba(225,29,72,0.2);
+      animation: popIn 0.35s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .num-box.second {
+      background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(37,99,235,0.1));
+      border: 2px solid rgba(37,99,235,0.5);
+      color: #93C5FD;
+      box-shadow: 0 0 20px rgba(37,99,235,0.2);
+      animation: popIn 0.35s 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .arrow-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--muted);
+      animation: popIn 0.35s 0.18s cubic-bezier(0.34,1.56,0.64,1) both;
+      flex-shrink: 0;
+    }
+
+    .result-hint {
+      margin-top: 18px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* Rolling state */
+    .rolling .num-box {
+      animation: roll 0.12s infinite alternate;
+    }
+
+    @keyframes roll {
+      from { transform: scale(0.95); }
+      to   { transform: scale(1.05); }
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    /* Footer note */
+    .footer-note {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <svg class="wolf-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 12 L20 28 L14 44 L32 36 L50 44 L44 28 L56 12 L42 20 L32 10 L22 20 Z" fill="#E11D48" opacity="0.9"/>
+      <circle cx="24" cy="30" r="3" fill="#FFF"/>
+      <circle cx="40" cy="30" r="3" fill="#FFF"/>
+      <path d="M28 38 Q32 42 36 38" stroke="#FFF" stroke-width="2" stroke-linecap="round" fill="none"/>
+    </svg>
+    <h1 class="title">狼人殺</h1>
+    <p class="subtitle">Werewolf — 座位抽選器</p>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Player count select -->
+    <div class="select-row">
+      <span class="select-label">玩家人數</span>
+      <select id="playerCount" aria-label="選擇玩家人數">
+        <option value="6" selected>6 人</option>
+        <option value="1">1 人</option>
+        <option value="2">2 人</option>
+        <option value="3">3 人</option>
+        <option value="4">4 人</option>
+        <option value="5">5 人</option>
+        <option value="7">7 人</option>
+        <option value="8">8 人</option>
+        <option value="9">9 人</option>
+        <option value="10">10 人</option>
+        <option value="11">11 人</option>
+        <option value="12">12 人</option>
+        <option value="13">13 人</option>
+        <option value="14">14 人</option>
+        <option value="15">15 人</option>
+      </select>
+    </div>
+
+    <!-- Player grid -->
+    <div class="grid-section">
+      <div class="grid-header">
+        <span class="grid-label">點擊標記死亡</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="grid-alive-count">存活 <span id="aliveCount">6</span> 人</span>
+          <button class="btn-reset" onclick="resetDead()">全部復活</button>
+        </div>
+      </div>
+      <div class="player-grid" id="playerGrid"></div>
+    </div>
+
+    <hr class="divider" style="margin-top:0;margin-bottom:24px;" />
+
+    <!-- Spin button (random) -->
+    <button class="btn-spin" id="spinBtn" onclick="spin(null)" aria-label="隨機抽選">
+      <span class="btn-inner">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          <polyline points="21 3 21 9 15 9"/>
+        </svg>
+        隨機抽選
+      </span>
+    </button>
+
+    <!-- Direction buttons -->
+    <div class="btn-dir-row">
+      <button class="btn-dir btn-forward" id="fwdBtn" onclick="spin(true)" aria-label="正向抽選">
+        <span class="btn-dir-inner">正向</span>
+      </button>
+      <button class="btn-dir btn-reverse" id="revBtn" onclick="spin(false)" aria-label="逆向抽選">
+        <span class="btn-dir-inner">逆向</span>
+      </button>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Result -->
+    <div class="result-area" id="resultArea">
+      <p class="result-placeholder">按下任一按鈕開始</p>
+    </div>
+
+  </div>
+
+  <p class="footer-note">正向 = 小→大 ／ 逆向 = 大→小</p>
+
+</div>
+
+<script>
+  // Sort select options 1-15 in order
+  const sel = document.getElementById('playerCount');
+  const opts = Array.from(sel.options).sort((a, b) => +a.value - +b.value);
+  sel.innerHTML = '';
+  opts.forEach(o => sel.appendChild(o));
+  sel.value = '6';
+
+  let deadSet = new Set();
+
+  function renderGrid() {
+    const n = parseInt(document.getElementById('playerCount').value);
+    const grid = document.getElementById('playerGrid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= n; i++) {
+      const chip = document.createElement('button');
+      chip.className = 'player-chip' + (deadSet.has(i) ? ' dead' : '');
+      chip.textContent = i;
+      chip.setAttribute('aria-label', `${i} 號玩家`);
+      chip.onclick = () => toggleDead(i);
+      grid.appendChild(chip);
+    }
+    updateAliveCount(n);
+  }
+
+  function updateAliveCount(n) {
+    const alive = n - deadSet.size;
+    document.getElementById('aliveCount').textContent = alive;
+  }
+
+  function toggleDead(num) {
+    if (deadSet.has(num)) deadSet.delete(num);
+    else deadSet.add(num);
+    renderGrid();
+  }
+
+  function resetDead() {
+    deadSet.clear();
+    renderGrid();
+  }
+
+  document.getElementById('playerCount').addEventListener('change', () => {
+    deadSet.clear();
+    renderGrid();
+  });
+
+  renderGrid();
+
+  function getAlive(n) {
+    const pool = [];
+    for (let i = 1; i <= n; i++) {
+      if (!deadSet.has(i)) pool.push(i);
+    }
+    return pool;
+  }
+
+  function getTwoAlive(n) {
+    const pool = getAlive(n);
+    if (pool.length < 2) return null;
+    const i = Math.floor(Math.random() * pool.length);
+    let j;
+    do { j = Math.floor(Math.random() * pool.length); } while (j === i);
+    return [pool[i], pool[j]];
+  }
+
+  const allBtns = () => ['spinBtn','fwdBtn','revBtn'].map(id => document.getElementById(id));
+
+  function spin(forceDirection) {
+    const n = parseInt(document.getElementById('playerCount').value);
+    const area = document.getElementById('resultArea');
+
+    if (getAlive(n).length < 2) {
+      area.innerHTML = `<p class="result-placeholder" style="color:var(--pink)">存活玩家不足 2 人</p>`;
+      return;
+    }
+
+    allBtns().forEach(b => b.disabled = true);
+
+    let ticks = 0;
+    const maxTicks = 18;
+    const interval = setInterval(() => {
+      const pair = getTwoAlive(n);
+      area.innerHTML = buildResultHTML(pair[0], pair[1], Math.random() < 0.5, true);
+      ticks++;
+      if (ticks >= maxTicks) {
+        clearInterval(interval);
+        finalResult(n, area, forceDirection);
+      }
+    }, 80);
+  }
+
+  function finalResult(n, area, forceDirection) {
+    const pair = getTwoAlive(n);
+    const isForward = forceDirection === null ? Math.random() < 0.5 : forceDirection;
+    area.innerHTML = buildResultHTML(pair[0], pair[1], isForward, false);
+    allBtns().forEach(b => b.disabled = false);
+  }
+
+  function buildResultHTML(a, b, isForward, rolling) {
+    const small = Math.min(a, b);
+    const large = Math.max(a, b);
+    const first  = isForward ? small : large;
+    const second = isForward ? large : small;
+
+    const dirClass = isForward ? 'forward' : 'reverse';
+    const dirLabel = isForward ? '正向' : '逆向';
+    const dirSub   = isForward ? `${small} → ${large}` : `${large} → ${small}`;
+
+    const arrowPath = isForward
+      ? `<polyline points="5 12 19 12 13 6"/><polyline points="19 12 13 18"/>`
+      : `<polyline points="19 12 5 12 11 6"/><polyline points="5 12 11 18"/>`;
+
+    const badgeIcon = '';
+
+    return `
+      <div class="result-card ${rolling ? 'rolling' : ''}">
+        <div class="direction-badge ${dirClass}">
+          ${badgeIcon}
+          ${dirLabel} &nbsp;${dirSub}
+        </div>
+        <div class="numbers-row">
+          <div class="num-box first">${first}</div>
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/>
+          </svg>
+          <div class="num-box second">${second}</div>
+        </div>
+        <p class="result-hint">從 <strong style="color:var(--text)">${first}</strong> 號開始，依序到 <strong style="color:var(--text)">${second}</strong> 號</p>
+      </div>`;
+  }
+</script>
+
+</body>
+</html>
